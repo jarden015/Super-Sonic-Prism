@@ -259,20 +259,6 @@
 
     const SR = 22050;
 
-    // Tuning: push it toward a sharper, toy-like "Speak & Spell" bite.
-    const SPEAK = {
-      harmonicCount: 12,
-      formantQ: 9,
-      plosiveHighpassHz: 1000,
-      bitDepth: 6,
-      downsampleHz: 8000,
-      preEmphasis: 0.85,
-      drive: 1.6,
-      useReverb: false,
-      reverbDelayMs: 24,
-      reverbDecay: 0.18,
-    };
-
     // formant presets (approximate)
     const FORMANTS = {
       'A': [800, 1150, 2900],
@@ -297,7 +283,7 @@
 
       // create a node to sum harmonics
       const harmonics = [];
-      for(let h=1; h<=SPEAK.harmonicCount; h++){
+      for(let h=1; h<=8; h++){
         const o = offline.createOscillator();
         o.type = 'sine';
         o.frequency.value = f0 * h;
@@ -329,7 +315,7 @@
         const bp = offline.createBiquadFilter();
         bp.type = 'bandpass';
         bp.frequency.value = f;
-        bp.Q.value = SPEAK.formantQ;
+        bp.Q.value = 8;
         splitter.connect(bp);
         bp.connect(sum);
       }
@@ -337,8 +323,8 @@
       // envelope on master
       const now = 0;
       master.gain.setValueAtTime(0.0, now);
-      master.gain.linearRampToValueAtTime(1.0, now + 0.015);
-      master.gain.setValueAtTime(1.0, now + dur - 0.04);
+      master.gain.linearRampToValueAtTime(1.0, now + 0.02);
+      master.gain.setValueAtTime(1.0, now + dur - 0.05);
       master.gain.linearRampToValueAtTime(0.0, now + dur);
 
       const rendered = await offline.startRendering();
@@ -351,12 +337,12 @@
       const offline = new OfflineAudioContext(1, len, SR);
       const noiseBuf = offline.createBuffer(1, len, SR);
       const data = noiseBuf.getChannelData(0);
-      for(let i=0;i<len;i++) data[i] = (Math.random()*2 - 1) * Math.exp(-8 * (i/len)) * 0.6;
+      for(let i=0;i<len;i++) data[i] = (Math.random()*2 - 1) * Math.exp(-6 * (i/len));
       const src = offline.createBufferSource();
       src.buffer = noiseBuf;
       const hp = offline.createBiquadFilter();
       hp.type = 'highpass';
-      hp.frequency.value = SPEAK.plosiveHighpassHz;
+      hp.frequency.value = 800;
       src.connect(hp);
       hp.connect(offline.destination);
       src.start(0);
@@ -401,36 +387,6 @@
         }
       }
       return out;
-    }
-
-    function preEmphasisFloat32(input, coeff=0.92){
-      const out = new Float32Array(input.length);
-      if(input.length === 0) return out;
-      out[0] = input[0];
-      for(let i=1;i<input.length;i++){
-        out[i] = input[i] - coeff * input[i-1];
-      }
-      return out;
-    }
-
-    function softClipFloat32(input, drive=2.0){
-      const out = new Float32Array(input.length);
-      for(let i=0;i<input.length;i++){
-        out[i] = Math.tanh(input[i] * drive);
-      }
-      return out;
-    }
-
-    function applyFadeInOutInPlace(input, fadeMs=6){
-      const fade = Math.max(1, Math.floor(SR * (fadeMs / 1000)));
-      const n = input.length;
-      const f = Math.min(fade, Math.floor(n / 2));
-      for(let i=0;i<f;i++){
-        const a = i / f;
-        input[i] *= a;
-        input[n - 1 - i] *= a;
-      }
-      return input;
     }
 
     // assemble phrase from tokens (simple mapping)
@@ -487,26 +443,15 @@
       }
 
       // add comb reverb
-      if(SPEAK.useReverb){
-        out = combReverbFloat32(out, SPEAK.reverbDelayMs, SPEAK.reverbDecay);
-      }
-
-      // brighten (pre-emphasis) before the grit stages
-      out = preEmphasisFloat32(out, SPEAK.preEmphasis);
+      out = combReverbFloat32(out, 28, 0.26);
 
       // bitcrush/downsample to get toy character
-      out = bitcrushFloat32(out, SPEAK.bitDepth, SPEAK.downsampleHz);
-
-      // add a touch of saturation so consonants "pop" more
-      out = softClipFloat32(out, SPEAK.drive);
+      out = bitcrushFloat32(out, 6, 6000);
 
       // normalize
       let max = 0;
       for(let i=0;i<out.length;i++) if(Math.abs(out[i]) > max) max = Math.abs(out[i]);
       if(max > 0) for(let i=0;i<out.length;i++) out[i] = out[i] / max * 0.9;
-
-      // prevent start/end discontinuity clicks
-      applyFadeInOutInPlace(out, 6);
 
       return out;
     }
@@ -519,23 +464,11 @@
       buf.copyToChannel(arr, 0, 0);
       const src = audioCtx.createBufferSource();
       src.buffer = buf;
-
-      const gain = audioCtx.createGain();
-      const now = audioCtx.currentTime;
-      const dur = arr.length / SR;
-      const fadeIn = 0.008;
-      const fadeOut = 0.015;
-      gain.gain.setValueAtTime(0.0, now);
-      gain.gain.linearRampToValueAtTime(1.0, now + fadeIn);
-      gain.gain.setValueAtTime(1.0, Math.max(now + fadeIn, now + dur - fadeOut));
-      gain.gain.linearRampToValueAtTime(0.0, now + dur);
-
-      src.connect(gain);
-      gain.connect(analyser);
-      src.start(now);
+      src.connect(analyser);
+      src.start();
       // stop after buffer ends
       src.onended = () => { console.log('Playback ended'); };
-      return { src, gain };
+      return src;
     }
 
     // Speak buttons
@@ -544,15 +477,7 @@
       const phrase = 'PRISM LOOP';
       document.getElementById('speakBtn').textContent = 'Synthesizing…';
       const arr = await synthPhrase(phrase);
-      if(currentSource){
-        try{
-          const now = audioCtx ? audioCtx.currentTime : 0;
-          currentSource.gain.gain.cancelScheduledValues(now);
-          currentSource.gain.gain.setValueAtTime(currentSource.gain.gain.value, now);
-          currentSource.gain.gain.linearRampToValueAtTime(0.0, now + 0.02);
-          currentSource.src.stop(now + 0.03);
-        }catch(e){}
-      }
+      if(currentSource) try{ currentSource.stop(); }catch(e){}
       currentSource = await playFloat32(arr);
       document.getElementById('speakBtn').textContent = 'Speak: "PRISM LOOP"';
     });
@@ -562,15 +487,7 @@
       if(!text){ alert('Type a short phrase first'); return; }
       document.getElementById('speakCustom').textContent = 'Synthesizing…';
       const arr = await synthPhrase(text);
-      if(currentSource){
-        try{
-          const now = audioCtx ? audioCtx.currentTime : 0;
-          currentSource.gain.gain.cancelScheduledValues(now);
-          currentSource.gain.gain.setValueAtTime(currentSource.gain.gain.value, now);
-          currentSource.gain.gain.linearRampToValueAtTime(0.0, now + 0.02);
-          currentSource.src.stop(now + 0.03);
-        }catch(e){}
-      }
+      if(currentSource) try{ currentSource.stop(); }catch(e){}
       currentSource = await playFloat32(arr);
       document.getElementById('speakCustom').textContent = 'Speak Custom';
     });
