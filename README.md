@@ -1,2 +1,2 @@
-# Prism-Loop
+# Super-Sonic-Prism
 Windows Audio Fun!
