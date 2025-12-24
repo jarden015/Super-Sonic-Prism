@@ -259,6 +259,22 @@
 
     const SR = 22050;
 
+    // Tuning: push it toward a sharper, toy-like "Speak & Spell" bite.
+    const SPEAK = {
+      harmonicCount: 12,
+      formantQ: 14,
+      plosiveHighpassHz: 1600,
+      bitDepth: 5,
+      downsampleHz: 7500,
+      preEmphasis: 0.92,
+      drive: 2.2,
+      clickMs: 2.5,
+      clickAmp: 0.32,
+      useReverb: false,
+      reverbDelayMs: 24,
+      reverbDecay: 0.18,
+    };
+
     // formant presets (approximate)
     const FORMANTS = {
       'A': [800, 1150, 2900],
@@ -283,7 +299,7 @@
 
       // create a node to sum harmonics
       const harmonics = [];
-      for(let h=1; h<=8; h++){
+      for(let h=1; h<=SPEAK.harmonicCount; h++){
         const o = offline.createOscillator();
         o.type = 'sine';
         o.frequency.value = f0 * h;
@@ -315,7 +331,7 @@
         const bp = offline.createBiquadFilter();
         bp.type = 'bandpass';
         bp.frequency.value = f;
-        bp.Q.value = 8;
+        bp.Q.value = SPEAK.formantQ;
         splitter.connect(bp);
         bp.connect(sum);
       }
@@ -323,8 +339,8 @@
       // envelope on master
       const now = 0;
       master.gain.setValueAtTime(0.0, now);
-      master.gain.linearRampToValueAtTime(1.0, now + 0.02);
-      master.gain.setValueAtTime(1.0, now + dur - 0.05);
+      master.gain.linearRampToValueAtTime(1.0, now + 0.006);
+      master.gain.setValueAtTime(1.0, now + dur - 0.03);
       master.gain.linearRampToValueAtTime(0.0, now + dur);
 
       const rendered = await offline.startRendering();
@@ -342,7 +358,7 @@
       src.buffer = noiseBuf;
       const hp = offline.createBiquadFilter();
       hp.type = 'highpass';
-      hp.frequency.value = 800;
+      hp.frequency.value = SPEAK.plosiveHighpassHz;
       src.connect(hp);
       hp.connect(offline.destination);
       src.start(0);
@@ -387,6 +403,34 @@
         }
       }
       return out;
+    }
+
+    function preEmphasisFloat32(input, coeff=0.92){
+      const out = new Float32Array(input.length);
+      if(input.length === 0) return out;
+      out[0] = input[0];
+      for(let i=1;i<input.length;i++){
+        out[i] = input[i] - coeff * input[i-1];
+      }
+      return out;
+    }
+
+    function softClipFloat32(input, drive=2.0){
+      const out = new Float32Array(input.length);
+      for(let i=0;i<input.length;i++){
+        out[i] = Math.tanh(input[i] * drive);
+      }
+      return out;
+    }
+
+    function addClickTransientInPlace(input, clickMs=2.5, amp=0.3){
+      const n = Math.max(1, Math.floor(SR * (clickMs / 1000)));
+      for(let i=0;i<n && i<input.length;i++){
+        const env = Math.exp(-6 * (i / n));
+        const s = (i % 2 === 0 ? 1 : -1);
+        input[i] += amp * env * s;
+      }
+      return input;
     }
 
     // assemble phrase from tokens (simple mapping)
@@ -442,11 +486,22 @@
         offset += p.length;
       }
 
+      // add a tiny transient "click" up front for extra pop
+      addClickTransientInPlace(out, SPEAK.clickMs, SPEAK.clickAmp);
+
       // add comb reverb
-      out = combReverbFloat32(out, 28, 0.26);
+      if(SPEAK.useReverb){
+        out = combReverbFloat32(out, SPEAK.reverbDelayMs, SPEAK.reverbDecay);
+      }
+
+      // brighten (pre-emphasis) before the grit stages
+      out = preEmphasisFloat32(out, SPEAK.preEmphasis);
 
       // bitcrush/downsample to get toy character
-      out = bitcrushFloat32(out, 6, 6000);
+      out = bitcrushFloat32(out, SPEAK.bitDepth, SPEAK.downsampleHz);
+
+      // add a touch of saturation so consonants "pop" more
+      out = softClipFloat32(out, SPEAK.drive);
 
       // normalize
       let max = 0;
