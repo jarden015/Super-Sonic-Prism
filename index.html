@@ -140,7 +140,7 @@
         analyser = audioCtx.createAnalyser();
         analyser.fftSize = 256;
         masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.12;
+        masterGain.gain.value = 0.62;
         analyser.connect(masterGain);
         masterGain.connect(audioCtx.destination);
         console.log('AudioContext created', audioCtx.state);
