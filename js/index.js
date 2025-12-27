@@ -14,13 +14,10 @@
     return;
   }
 
-  let posts = api.loadPosts();
-  posts = api.prunePosts(posts);
-  api.sortNewestFirst(posts);
+  function seedIfEmpty(currentPosts) {
+    if (currentPosts.length || !POSTS_CONFIG.length) return currentPosts;
 
-  // Initialize posts from config if storage is empty
-  if (!posts.length && POSTS_CONFIG.length) {
-    posts = POSTS_CONFIG.map((cfg) => {
+    const seeded = POSTS_CONFIG.map((cfg) => {
       const blocks = [];
       if (Array.isArray(cfg.blocks)) {
         for (const block of cfg.blocks) {
@@ -37,15 +34,44 @@
           }
         }
       }
-      return { id: crypto.randomUUID?.() ?? String(Date.now()), createdAt: Date.now(), blocks };
+      return {
+        id: crypto.randomUUID?.() ?? String(Date.now()),
+        createdAt: Date.now(),
+        blocks
+      };
     });
 
-    posts = api.prunePosts(posts);
-    api.sortNewestFirst(posts);
-    api.savePosts(posts);
-  } else {
-    api.savePosts(posts);
+    return seeded;
   }
 
-  api.renderPostList(postList, posts);
+  function loadAndRender() {
+    let posts = api.loadPosts();
+    posts = api.prunePosts(posts);
+    api.sortNewestFirst(posts);
+    posts = seedIfEmpty(posts);
+
+    const before = (() => {
+      try {
+        return localStorage.getItem(api.POSTS_KEY);
+      } catch {
+        return null;
+      }
+    })();
+    const after = JSON.stringify(posts);
+
+    if (before !== after) {
+      api.savePosts(posts);
+    }
+
+    api.renderPostList(postList, posts);
+  }
+
+  loadAndRender();
+
+  // Keep in sync with the local admin page when both are open.
+  window.addEventListener('storage', (e) => {
+    if (e.key === api.POSTS_KEY || e.key === api.MAX_AGE_KEY) {
+      loadAndRender();
+    }
+  });
 })();
