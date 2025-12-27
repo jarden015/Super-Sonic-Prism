@@ -1,6 +1,37 @@
 (() => {
   document.documentElement.dataset.js = 'true';
 
+  // Logo spin on hover: track mouse position relative to logo center
+  const logoImg = document.querySelector('.middle-layer > img');
+  if (logoImg) {
+    let logoCenterX = 0;
+    let logoCenterY = 0;
+
+    function updateLogoCenterPosition() {
+      const rect = logoImg.getBoundingClientRect();
+      logoCenterX = rect.left + rect.width / 2;
+      logoCenterY = rect.top + rect.height / 2;
+    }
+
+    updateLogoCenterPosition();
+    window.addEventListener('resize', updateLogoCenterPosition);
+
+    document.addEventListener('mousemove', (e) => {
+      const spinRadius = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--logo-spin-radius')
+      );
+      const distX = e.clientX - logoCenterX;
+      const distY = e.clientY - logoCenterY;
+      const distance = Math.sqrt(distX * distX + distY * distY);
+
+      if (distance <= spinRadius) {
+        logoImg.classList.add('logo-spinning');
+      } else {
+        logoImg.classList.remove('logo-spinning');
+      }
+    });
+  }
+
   const api = window.SonicPrismPosts;
   if (!api) return;
 

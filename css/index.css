@@ -1,5 +1,10 @@
 :root {
   color-scheme: dark;
+  --logo-spin-radius: 30px;
+  --logo-spin-speed: 30s;
+  --logo-spin-ease: cubic-bezier(.10, .03, 0.75, 0.988);
+  --logo-ease-in-duration: 2s;
+  --logo-rotations: 260;
 }
 
 * {
@@ -19,15 +24,30 @@ body {
   color: rgba(255, 255, 255, 0.88);
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
+
 .site-header {
-  background: #0a0d16;
+  background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   padding: 0;
   flex-shrink: 0;
   position: relative;
   z-index: 100;
+  overflow: hidden;
+}
+
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 13, 22, 0.000000001);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .nav-container {
@@ -37,6 +57,8 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 32px;
+  position: relative;
+  z-index: 1;
 }
 
 .nav-brand {
@@ -70,6 +92,44 @@ body {
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  position: relative;
+}
+
+.middle-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+
+  display: grid;
+  place-items: center;
+
+  /* Decorative layer above backgrounds, below all content */
+  background:
+    radial-gradient(1200px 700px at 20% 20%, rgba(120, 200, 255, 0.10), transparent 60%),
+    radial-gradient(1000px 600px at 80% 70%, rgba(170, 140, 255, 0.10), transparent 60%);
+}
+
+.middle-layer > img,
+.middle-layer > video,
+.middle-layer > iframe {
+  display: block;
+}
+
+.middle-layer > img {
+  width: min(52vmin, 420px);
+  height: auto;
+  max-width: 92%;
+  max-height: 92%;
+  object-fit: contain;
+  opacity: 0.5;
+  transform: scale(1.76);
+  transition: transform 0.1s linear;
+}
+
+.middle-layer > img.logo-spinning {
+  animation: spinLogo var(--logo-spin-speed) var(--logo-spin-ease) forwards;
 }
 
 .column {
@@ -119,7 +179,7 @@ body {
 
 .column-inner {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   max-width: none;
 }
@@ -223,8 +283,21 @@ h2 {
   min-height: 0;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.03);
   overflow: hidden;
+  position: relative;
+  background: transparent;
+}
+
+.post-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.03);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .post-list {
@@ -234,15 +307,35 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .post {
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.10);
-  background: rgba(0, 0, 0, 0.12);
   padding: 12px;
   min-width: 0;
   overflow: hidden;
+  position: relative;
+  background: transparent;
+}
+
+.post::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.12);
+  -webkit-backdrop-filter: blur(80px);
+  backdrop-filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.post > * {
+  position: relative;
+  z-index: 1;
 }
 
 .post-meta {
@@ -339,6 +432,15 @@ h2 {
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+@keyframes spinLogo {
+  0% {
+    transform: scale(1.76) rotate(0deg);
+  }
+  100% {
+    transform: scale(1.76) rotate(calc(360deg * var(--logo-rotations)));
   }
 }
 
