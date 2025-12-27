@@ -52,11 +52,12 @@ body {
 
 .nav-container {
   max-width: 100%;
-  padding: clamp(12px, 2vw, 20px) clamp(24px, 4vw, 56px);
+  padding-block: clamp(1.5vh, 1vw, 3vh);
+  padding-inline: clamp(4vw, 4vw, 6vw);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 32px;
+  gap: clamp(2vw, 3vw, 4vw);
   position: relative;
   z-index: 1;
 }
@@ -102,6 +103,7 @@ body {
   z-index: 1;
   pointer-events: none;
   overflow: hidden;
+  padding-top: clamp(4vh, 5vw, 6vh);
 
   display: grid;
   place-items: center;
@@ -125,7 +127,7 @@ body {
   max-height: 92%;
   object-fit: contain;
   opacity: 0.5;
-  transform: scale(1.76);
+  transform: scale(1.5048);
   transition: transform 0.1s linear;
 }
 
@@ -440,10 +442,10 @@ h2 {
 
 @keyframes spinLogo {
   0% {
-    transform: scale(1.76) rotate(0deg);
+    transform: scale(1.5048) rotate(0deg);
   }
   100% {
-    transform: scale(1.76) rotate(calc(360deg * var(--logo-rotations)));
+    transform: scale(1.5048) rotate(calc(360deg * var(--logo-rotations)));
   }
 }
 
