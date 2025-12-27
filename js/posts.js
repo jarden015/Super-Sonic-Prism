@@ -92,22 +92,8 @@
     const url = normalizeHttpUrl(trimmed);
     if (!url) return null;
 
-    // Allow common GitHub-hosted patterns
-    try {
-      const u = new URL(url);
-      const host = u.hostname.toLowerCase();
-      const isGitHubHosted =
-        host === 'raw.githubusercontent.com' ||
-        host.endsWith('.github.io') ||
-        host === 'github.com' ||
-        host === 'user-images.githubusercontent.com' ||
-        host.endsWith('githubusercontent.com');
-
-      if (!isGitHubHosted) return null;
-      return u.toString();
-    } catch {
-      return null;
-    }
+    // Allow any http(s) image URL (the admin can still recommend repo-hosted images).
+    return url;
   }
 
   function parseIframeInput(raw) {
