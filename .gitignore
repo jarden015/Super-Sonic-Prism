@@ -1,0 +1,8 @@
+# Local-only admin UI (do not commit)
+admin.local.html
+css/admin.local.css
+js/admin.local.js
+
+# Optional: OS noise
+Thumbs.db
+Desktop.ini
