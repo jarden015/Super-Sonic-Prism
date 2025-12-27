@@ -74,7 +74,10 @@ body {
 
 .column {
   position: relative;
-  padding: clamp(24px, 4vw, 56px);
+  padding-top: 12px;
+  padding-left: clamp(12px, 2vw, 28px);
+  padding-right: clamp(12px, 2vw, 28px);
+  padding-bottom: 12px;
   display: flex;
   align-items: center;
 }
@@ -92,6 +95,7 @@ body {
 
 .left {
   background: #0a1020;
+  align-items: stretch;
 }
 
 .left::before {
@@ -116,7 +120,14 @@ body {
 .column-inner {
   position: relative;
   z-index: 1;
-  max-width: 48ch;
+  width: 100%;
+  max-width: none;
+}
+
+.left .column-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .right .column-inner {
@@ -287,7 +298,7 @@ h2 {
 }
 
 .demo-block {
-  width: min(360px, 100%);
+  width: 100%;
   padding: 16px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.10);
