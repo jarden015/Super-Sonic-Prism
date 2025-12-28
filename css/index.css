@@ -1,12 +1,28 @@
 :root {
   color-scheme: dark;
-  --logo-spin-radius: 30px;
+  --logo-spin-radius: 20px;
   --logo-spin-speed: 30s;
   --logo-spin-ease: cubic-bezier(.10, .03, 0.75, 0.988);
   --logo-ease-in-duration: 2s;
   --logo-rotations: 260;
   --logo-blur-in-duration: 1s;
   --logo-blur-out-duration: 1s;
+
+  --logo-opacity-rest: .2;
+  --logo-opacity-delay: 2s;
+  --logo-opacity-in-duration: 7s;
+  --logo-opacity-out-duration: 6s;
+
+  --logo-color-delay: 0s;
+  --logo-color-in-duration: 1s;
+  --logo-color-cycle-duration: 30s;
+  --logo-color-out-duration: 2s;
+  --logo-color-hue-start: 0deg;
+  --logo-color-hue-end: 800deg;
+  --logo-color-saturation: 12;
+  --logo-color-brightness: 1;
+  --logo-color-contrast: 1;
+  --logo-color-sepia: 2;
 }
 
 * {
@@ -132,9 +148,19 @@ body {
   max-width: 92%;
   max-height: 92%;
   object-fit: contain;
-  opacity: 0.5;
+  opacity: var(--logo-opacity-rest);
+  filter: none;
   transform: scale(1.5048);
-  transition: transform 0.1s linear;
+  transition:
+    transform 0.1s linear,
+    opacity var(--logo-opacity-out-duration) ease 0s;
+}
+
+body.logo-hover .middle-layer > img {
+  opacity: 1;
+  transition:
+    transform 0.1s linear,
+    opacity var(--logo-opacity-in-duration) ease var(--logo-opacity-delay);
 }
 
 .middle-layer > img.logo-spinning {
