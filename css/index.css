@@ -23,7 +23,6 @@ body {
   overflow: hidden;
 }
 
-
 .site-header {
   background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.10);
@@ -82,6 +81,40 @@ body {
 
 .nav-links a:hover {
   color: rgba(255, 255, 255, 1);
+}
+
+.nav-links a:active {
+  color: rgba(255, 255, 255, 1); /* Keep the hover color on active */
+}
+
+.nav-links a:link {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.nav-links a:visited {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* Unvisited links */
+a:link {
+  color: #3887e0; /* A soft blue that works on dark backgrounds */
+  text-decoration: none; /* Optional: Remove underlines */
+}
+
+/* Visited links */
+a:visited {
+  color: #7b68ee; /* A lighter purple for visited links */
+}
+
+/* Hover effect */
+a:hover {
+  color: #90cdfc; /* White on hover for contrast */
+  text-decoration: underline; /* Optional: Add underline on hover */
+}
+
+/* Active (clicked) state */
+a:active {
+  color: #cde4ff; /* A subtle red for active state */
 }
 
 .layout {
@@ -184,10 +217,6 @@ h2 {
   margin: 4px 0;
   letter-spacing: -0.02em;
 }
-
-
-
-
 
 .post-box {
   flex: 1;
