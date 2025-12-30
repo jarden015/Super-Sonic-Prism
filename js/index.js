@@ -85,3 +85,36 @@
     }
   });
 })();
+
+// GSAP animations for wow image and text
+(() => {
+  const wowImg = document.getElementById('wow-img');
+  const magicText = document.getElementById('magic-text');
+
+  if (!wowImg || !magicText) return;
+
+  let imgTween, textTween;
+
+  function startAnimations() {
+    // Kill any existing tweens
+    if (imgTween) imgTween.kill();
+    if (textTween) textTween.kill();
+
+    // Start spinning
+    imgTween = gsap.to(wowImg, { rotation: 260 * 360, duration: 30, ease: "power2.inOut" });
+    textTween = gsap.to(magicText, { rotation: -260 * 360, duration: 30, ease: "power2.inOut" });
+  }
+
+  function rewindAnimations() {
+    // Kill and rewind
+    if (imgTween) imgTween.kill();
+    if (textTween) textTween.kill();
+
+    imgTween = gsap.to(wowImg, { rotation: 0, duration: 2, ease: "power2.inOut" });
+    textTween = gsap.to(magicText, { rotation: 45, duration: 2, ease: "power2.inOut" });
+  }
+
+  // Add hover listeners to the image
+  wowImg.addEventListener('mouseenter', startAnimations);
+  wowImg.addEventListener('mouseleave', rewindAnimations);
+})();
