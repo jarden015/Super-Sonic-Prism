@@ -172,6 +172,13 @@
     time.textContent = formatTime(post.createdAt);
     meta.appendChild(time);
 
+    if (post?.sticky === true) {
+      const sticky = document.createElement('span');
+      sticky.className = 'post-sticky-label';
+      sticky.textContent = 'Stickied';
+      meta.appendChild(sticky);
+    }
+
     const content = document.createElement('div');
     content.className = 'post-content';
 
